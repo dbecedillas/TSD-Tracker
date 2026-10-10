@@ -58,6 +58,8 @@ h1{margin:2px 0 0;font-size:28px;font-weight:800;letter-spacing:-.01em}
 .field::placeholder{color:var(--mut);font-weight:500}
 .tog{align-self:flex-start;border:2px solid var(--line);background:none;color:var(--mut);font:700 14px var(--f);border-radius:999px;padding:7px 14px;cursor:pointer}
 .tog[aria-pressed="true"]{border-color:var(--ae);color:var(--ae)}
+.togs{display:flex;gap:8px;flex-wrap:wrap}
+.tog.tema[aria-pressed="true"]{border-color:var(--m);color:var(--m)}
 .go{border:0;border-radius:14px;background:var(--btn);color:var(--btnfg);font:800 16px var(--f);padding:15px;cursor:pointer}
 .go.on{background:var(--soft);color:var(--fg)}
 .sum{display:flex;align-items:center;gap:14px}
@@ -146,7 +148,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--btn);outline-of
 </div>
 
 <script>
-const SEED={"2026-10-05": {"hecho": true, "flash": false, "min": 90, "nota": "No me dio tiempo a leerlo en la mañana", "real": "", "mod": null}, "2026-10-06": {"hecho": true, "flash": false, "min": 40, "nota": "", "real": "He leído el T2 de AE", "mod": null}, "2026-10-07": {"hecho": true, "flash": false, "min": 53, "nota": "", "real": "Clase de FAD: 1ª mitad (57:18)", "mod": null}, "2026-10-08": {"hecho": false, "flash": false, "min": null, "nota": "", "real": "Día de oficina", "mod": null}, "2026-10-09": {"hecho": true, "flash": false, "min": null, "nota": "Termine la clase de FAD, mañana me lo veré de nuevo desde la célula.", "real": "", "mod": null}, "2026-10-10": {"hecho": true, "flash": false, "min": 60, "nota": "", "real": "Empecé con el esquema del T1 de FAD", "mod": null}, "2026-10-12": {"hecho": false, "flash": false, "min": null, "nota": "", "real": "", "mod": "ogu"}}, SEED_DATE="10/10/2026";
+const SEED={"2026-10-05": {"hecho": true, "flash": false, "tema": false, "min": 90, "nota": "No me dio tiempo a leerlo en la mañana", "real": "", "mod": null}, "2026-10-06": {"hecho": true, "flash": false, "tema": false, "min": 40, "nota": "", "real": "He leído el T2 de AE", "mod": null}, "2026-10-07": {"hecho": true, "flash": false, "tema": false, "min": 53, "nota": "", "real": "Clase de FAD: 1ª mitad (57:18)", "mod": null}, "2026-10-08": {"hecho": false, "flash": false, "tema": false, "min": null, "nota": "", "real": "Día de oficina", "mod": null}, "2026-10-09": {"hecho": true, "flash": false, "tema": false, "min": null, "nota": "Termine la clase de FAD, mañana me lo veré de nuevo desde la célula.", "real": "", "mod": null}, "2026-10-10": {"hecho": true, "flash": false, "tema": false, "min": 60, "nota": "", "real": "Empecé con el esquema del T1 de FAD", "mod": null}, "2026-10-12": {"hecho": false, "flash": false, "tema": false, "min": null, "nota": "", "real": "", "mod": "ogu"}}, SEED_DATE="10/10/2026";
 let readOnly=false;
 const FIRST_WEEK="2026-10-05", FLASH_FROM="2026-10-12", PARC_WEEK="2027-01-04";
 const DOWS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
@@ -176,7 +178,7 @@ let week=curWeek<FIRST_WEEK?FIRST_WEEK:curWeek;
 let sel=(todayIso>=week&&todayIso<=addDays(week,6))?todayIso:week;
 const state={}; let db=null, canWrite=true; const timers={}; let earnedPrev=null;
 
-function get(d){return state[d]||{hecho:false,flash:false,min:null,nota:"",real:"",mod:null}}
+function get(d){return state[d]||{hecho:false,flash:false,tema:false,min:null,nota:"",real:"",mod:null}}
 function isSes(s){return !!(s.hecho||s.flash||(s.min||0)>0)}
 function planMin(d){return PLAN[idx(d)].m+(d>=FLASH_FROM?20:0)}
 function modOf(d){const P=PLAN[idx(d)];return P.pick?(get(d).mod||P.mod):P.mod}
@@ -202,11 +204,11 @@ function chain(){
 
 function medals(c){
   let total=0,sat=false;
-  for(const d in state){if(isSes(state[d]))total++;if(idx(d)===5&&state[d].hecho)sat=true}
+  for(const d in state){if(isSes(state[d]))total++;if(state[d].tema)sat=true}
   const n=(v,max,u)=>`${Math.min(v,max)} de ${max}${u?" "+u:""}`;
   return [
     {id:"w1",s:"1",n:"Primera semana",on:c.okAny,p:c.okAny?"4 sesiones en una semana":"Llega a 4 sesiones",col:"ae"},
-    {id:"fad",s:"FAD",n:"Primer tema",on:sat,p:sat?"Esquema, flashcards y test":"Cierra un sábado de FAD",col:"fad"},
+    {id:"fad",s:"T1",n:"Primer tema",on:sat,p:sat?"Primer tema terminado":"Marca «Tema terminado» al cerrarlo",col:"fad"},
     {id:"s25",s:"25",n:"25 sesiones",on:total>=25,p:n(total,25),col:"ogu"},
     {id:"c4",s:"4",n:"Cadena de 4",on:c.best>=4,p:n(c.best,4,"semanas"),col:"ae"},
     {id:"s50",s:"50",n:"50 sesiones",on:total>=50,p:n(total,50),col:"fad"},
@@ -252,7 +254,7 @@ function renderCard(){
       <label class="chip${custom?" on":""}"><input id="min-${date}" type="number" inputmode="numeric" min="0" max="600" placeholder="otro" aria-label="Otros minutos"></label>
     </div></div>
     <div><div class="lbl">Si cambió el plan</div><input class="field" id="real-${date}" maxlength="80" placeholder="Lo que hice"></div>
-    ${date>=FLASH_FROM?`<button class="tog" aria-pressed="${s.flash}">Flashcards 20'</button>`:""}
+    <div class="togs">${date>=FLASH_FROM?`<button class="tog flash" aria-pressed="${s.flash}">Flashcards 20'</button>`:""}${mod!=="of"?`<button class="tog tema" aria-pressed="${!!s.tema}">Tema terminado</button>`:""}</div>
     <input class="field" id="note-${date}" maxlength="140" placeholder="Nota">
     <button class="go${s.hecho?" on":""}">${s.hecho?"Hecho ✓  ·  Deshacer":"Marcar como hecho"}</button>`;
   const t=card.querySelector(".task"), h=t.querySelector("h2");
@@ -335,7 +337,7 @@ function save(date){
   timers[date]=setTimeout(async()=>{
     if(!db||!canWrite) return;
     const s=get(date); setStatus("Guardando…");
-    try{await db.doc("dias/"+date).set({fecha:date,hecho:!!s.hecho,flash:!!s.flash,min:s.min??null,nota:s.nota||"",real:s.real||"",mod:s.mod||null});setStatus("Guardado");setTimeout(()=>setStatus(""),1500);}
+    try{await db.doc("dias/"+date).set({fecha:date,hecho:!!s.hecho,flash:!!s.flash,tema:!!s.tema,min:s.min??null,nota:s.nota||"",real:s.real||"",mod:s.mod||null});setStatus("Guardado");setTimeout(()=>setStatus(""),1500);}
     catch(e){if(e&&e.code==="invalid_argument"){canWrite=false;document.getElementById("banner").hidden=false;setStatus("")}else setStatus("No se pudo guardar. Inténtalo de nuevo en un momento.");}
   },500);
 }
@@ -357,7 +359,8 @@ const cardEl=document.getElementById("card");
 cardEl.addEventListener("click",e=>{
   const md=e.target.closest("[data-mod]"); if(md){update({mod:md.dataset.mod});return;}
   const c=e.target.closest("[data-min]"); if(c){const m=Number(c.dataset.min);update({min:get(sel).min===m?null:m});return;}
-  if(e.target.closest(".tog")){update({flash:!get(sel).flash});return;}
+  if(e.target.closest(".tog.flash")){update({flash:!get(sel).flash});return;}
+  if(e.target.closest(".tog.tema")){update({tema:!get(sel).tema});return;}
   if(e.target.closest(".go")){update({hecho:!get(sel).hecho});return;}
 });
 cardEl.addEventListener("input",e=>{
@@ -381,7 +384,7 @@ renderAll();
     const b=document.getElementById("banner"); b.textContent=`Copia de solo lectura con tus datos hasta el ${SEED_DATE}. Para registrar, usa la herramienta en Claude.`; b.hidden=false;
     const list=renderAll(); earnedPrev=list.filter(m=>m.on).map(m=>m.id); return}
   db.collection("dias").onSnapshot(snap=>{
-    snap.docs.forEach(d=>{const v=d.data();if(v)state[d.id]={hecho:!!v.hecho,flash:!!v.flash,min:v.min??null,nota:v.nota||"",real:v.real||"",mod:v.mod||null};});
+    snap.docs.forEach(d=>{const v=d.data();if(v)state[d.id]={hecho:!!v.hecho,flash:!!v.flash,tema:!!v.tema,min:v.min??null,nota:v.nota||"",real:v.real||"",mod:v.mod||null};});
     const a=document.activeElement; let list;
     if(a&&a.closest&&a.closest("#card")&&a.tagName==="INPUT"){renderStrip();list=renderStats()}else list=renderAll();
     earnedPrev=list.filter(m=>m.on).map(m=>m.id);
