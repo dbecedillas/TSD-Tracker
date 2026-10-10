@@ -1,3 +1,4 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Seguimiento TSD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -115,7 +116,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--btn);outline-of
     <span style="background:var(--ogul);color:var(--ogu)">OGU</span>
     <span style="background:var(--ofl);color:var(--of)">Oficina</span>
   </div>
-  <div id="banner" class="banner" hidden>Esta vista no puede guardar. Ábrela desde tu cuenta de Claude para registrar.</div>
+  <div id="banner" class="banner" hidden></div>
 
   <div class="card" id="card"></div>
 
@@ -145,6 +146,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--btn);outline-of
 </div>
 
 <script>
+const SEED={"2026-10-05": {"hecho": true, "flash": false, "min": 90, "nota": "No me dio tiempo a leerlo en la mañana", "real": "", "mod": null}, "2026-10-06": {"hecho": true, "flash": false, "min": 40, "nota": "", "real": "He leído el T2 de AE", "mod": null}, "2026-10-07": {"hecho": true, "flash": false, "min": 53, "nota": "", "real": "Clase de FAD: 1ª mitad (57:18)", "mod": null}, "2026-10-08": {"hecho": false, "flash": false, "min": null, "nota": "", "real": "Día de oficina", "mod": null}, "2026-10-09": {"hecho": true, "flash": false, "min": null, "nota": "Termine la clase de FAD, mañana me lo veré de nuevo desde la célula.", "real": "", "mod": null}, "2026-10-10": {"hecho": true, "flash": false, "min": 60, "nota": "", "real": "Empecé con el esquema del T1 de FAD", "mod": null}, "2026-10-12": {"hecho": false, "flash": false, "min": null, "nota": "", "real": "", "mod": "ogu"}}, SEED_DATE="10/10/2026";
+let readOnly=false;
 const FIRST_WEEK="2026-10-05", FLASH_FROM="2026-10-12", PARC_WEEK="2027-01-04";
 const DOWS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 const DL=["L","M","X","J","V","S","D"];
@@ -337,6 +340,7 @@ function save(date){
   },500);
 }
 function update(patch,opts){
+  if(readOnly){renderCard();toast("Copia de solo lectura: registra en la herramienta de Claude");return}
   const card=!opts||opts.card!==false, w=mondayOf(parse(sel)), before=weekSes(w);
   state[sel]={...get(sel),...patch};
   renderStrip(); if(card) renderCard(); const list=renderStats();
@@ -372,7 +376,10 @@ renderAll();
 
 (async()=>{
   try{db=window.claude?await window.claude.use("db"):null}catch(e){db=null}
-  if(!db){canWrite=false;document.getElementById("banner").hidden=false;return}
+  if(!db){
+    canWrite=false; readOnly=true; Object.assign(state,SEED);
+    const b=document.getElementById("banner"); b.textContent=`Copia de solo lectura con tus datos hasta el ${SEED_DATE}. Para registrar, usa la herramienta en Claude.`; b.hidden=false;
+    const list=renderAll(); earnedPrev=list.filter(m=>m.on).map(m=>m.id); return}
   db.collection("dias").onSnapshot(snap=>{
     snap.docs.forEach(d=>{const v=d.data();if(v)state[d.id]={hecho:!!v.hecho,flash:!!v.flash,min:v.min??null,nota:v.nota||"",real:v.real||"",mod:v.mod||null};});
     const a=document.activeElement; let list;
@@ -381,3 +388,5 @@ renderAll();
   },()=>setStatus("Sin conexión con el registro. Recarga la página."));
 })();
 </script>
+
+</body></html>
