@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* Layout: franja de 7 días, tarjeta del día, anillo semanal, cadena de semanas con comodín y medallas. Color por módulo. */
+/* Layout: móvil = franja de 7 días + tarjeta + resumen apilado. Escritorio (>=900px) = tablero de 7 columnas arriba, tarjeta del día a la izquierda, anillo, cadena y medallas a la derecha. Color por módulo. */
 :root{
   --bg:#FFFFFF; --fg:#22212B; --mut:#8C8A99; --soft:#F4F3F8; --line:#E7E6EE; --card:#F6F5FA;
   --btn:#FF6B4A; --btnfg:#FFFFFF;
@@ -36,8 +36,23 @@ h1{margin:2px 0 0;font-size:28px;font-weight:800;letter-spacing:-.01em}
 .dc.done i{background:var(--bg)}
 .dc.sel{outline-color:var(--m)}
 .dc.today b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+.board{display:none}
+.bd{border:0;text-align:left;border-radius:16px;background:var(--card);color:var(--fg);font:600 13px var(--f);padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:7px;min-width:0;min-height:168px;outline:2px solid transparent;outline-offset:-2px}
+.bd.done{background:var(--ml)}
+.bd.sel{outline-color:var(--m)}
+.bdh{display:flex;justify-content:space-between;align-items:baseline;gap:6px;color:var(--mut);font-weight:700}
+.bdh b{font-size:20px;font-weight:800;color:var(--fg)}
+.bd.today .bdh b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+.bdok{font-weight:800;color:var(--m)}
+.bd .tag{align-self:flex-start}
+.bd.done .tag{background:var(--bg)}
+.bdt{font-size:14px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+.bdt s{display:block;color:var(--mut);font-weight:600;font-size:12px}
+.bdm{margin-top:auto;display:flex;flex-wrap:wrap;gap:4px 8px;font-size:12px;color:var(--mut);font-weight:700;font-variant-numeric:tabular-nums}
+.bdm .k{color:var(--m)}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 .legend span{font-size:12px;font-weight:800;border-radius:999px;padding:4px 10px}
+.main,.colA,.colB{display:flex;flex-direction:column;gap:18px;min-width:0}
 .card{background:var(--card);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:14px}
 .tagrow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);font-weight:600;flex-wrap:wrap}
 .tag{font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px;background:var(--ml);color:var(--m)}
@@ -62,6 +77,15 @@ h1{margin:2px 0 0;font-size:28px;font-weight:800;letter-spacing:-.01em}
 .tog.tema[aria-pressed="true"]{border-color:var(--m);color:var(--m)}
 .go{border:0;border-radius:14px;background:var(--btn);color:var(--btnfg);font:800 16px var(--f);padding:15px;cursor:pointer}
 .go.on{background:var(--soft);color:var(--fg)}
+.edit{border-top:1px solid var(--line);padding-top:12px}
+.edit summary{cursor:pointer;font-size:14px;font-weight:800;color:var(--mut);list-style:none;display:flex;align-items:center;gap:6px}
+.edit summary::-webkit-details-marker{display:none}
+.edit summary::before{content:"›";display:inline-block;transition:transform .15s;font-size:18px;line-height:1}
+.edit[open] summary::before{transform:rotate(90deg)}
+.editb{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:10px;margin-top:12px}
+.editb .full{grid-column:1/-1}
+.editb select{appearance:none;-webkit-appearance:none}
+.reset{justify-self:start;border:0;background:none;color:var(--btn);font:800 14px var(--f);padding:4px 0;cursor:pointer}
 .sum{display:flex;align-items:center;gap:14px}
 .sum svg{flex:none}
 .sum b{display:block;font-size:18px;font-weight:800}
@@ -95,9 +119,16 @@ h1{margin:2px 0 0;font-size:28px;font-weight:800;letter-spacing:-.01em}
 .banner{font-size:14px;color:var(--mut);background:var(--soft);border-radius:12px;padding:10px 12px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);font:800 14px var(--f);padding:11px 18px;border-radius:999px;max-width:calc(100% - 32px);text-align:center;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.18)}
 .fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:19}
-button:focus-visible,input:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
+@media (min-width:900px){
+  .wrap{max-width:1180px;padding-inline:28px;padding-block:32px 48px;gap:20px}
+  h1{font-size:32px}
+  .strip{display:none}
+  .board{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+  .main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+}
 @media (prefers-reduced-motion:no-preference){
-  #ring{transition:stroke-dasharray .4s ease}.dc{transition:background .15s}
+  #ring{transition:stroke-dasharray .4s ease}.dc,.bd{transition:background .15s}
   .sum.win svg{animation:pop .7s ease}
   .toast{animation:up .25s ease}
   @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
@@ -112,6 +143,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--btn);outline-of
   </header>
 
   <div class="strip" id="strip"></div>
+  <div class="board" id="board"></div>
   <div class="legend">
     <span style="background:var(--fadl);color:var(--fad)">FAD</span>
     <span style="background:var(--ael);color:var(--ae)">AE</span>
@@ -120,36 +152,41 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--btn);outline-of
   </div>
   <div id="banner" class="banner" hidden></div>
 
-  <div class="card" id="card"></div>
-
-  <div class="sum" id="sum">
-    <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--soft)" stroke-width="8"/><circle id="ring" cx="32" cy="32" r="26" fill="none" stroke="var(--btn)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 164" transform="rotate(-90 32 32)"/></svg>
-    <div><b id="sumA"></b><span id="sumB"></span></div>
-  </div>
-
-  <div class="sech">Cadena</div>
-  <div class="chain">
-    <div class="big"><b id="streak">0</b><span id="streakTxt">semanas seguidas</span></div>
-    <div class="weeks" id="weeks"></div>
-    <div class="wkey">
-      <span><i style="background:var(--ae)"></i>Cumplida</span>
-      <span><i style="background:var(--ogul)"></i>Comodín</span>
-      <span><i style="background:var(--soft)"></i>Rota</span>
-      <span><i style="border:2px dashed var(--line)"></i>En curso</span>
+  <div class="main">
+    <div class="colA">
+      <div class="card" id="card"></div>
     </div>
-    <div class="joker"><div id="jokerTxt"></div><span id="jokerTag"></span></div>
-  </div>
+    <div class="colB">
+      <div class="sum" id="sum">
+        <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--soft)" stroke-width="8"/><circle id="ring" cx="32" cy="32" r="26" fill="none" stroke="var(--btn)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 164" transform="rotate(-90 32 32)"/></svg>
+        <div><b id="sumA"></b><span id="sumB"></span></div>
+      </div>
 
-  <div class="sech">Medallas</div>
-  <div class="meds" id="meds"></div>
+      <div class="sech">Cadena</div>
+      <div class="chain">
+        <div class="big"><b id="streak">0</b><span id="streakTxt">semanas seguidas</span></div>
+        <div class="weeks" id="weeks"></div>
+        <div class="wkey">
+          <span><i style="background:var(--ae)"></i>Cumplida</span>
+          <span><i style="background:var(--ogul)"></i>Comodín</span>
+          <span><i style="background:var(--soft)"></i>Rota</span>
+          <span><i style="border:2px dashed var(--line)"></i>En curso</span>
+        </div>
+        <div class="joker"><div id="jokerTxt"></div><span id="jokerTag"></span></div>
+      </div>
+
+      <div class="sech">Medallas</div>
+      <div class="meds" id="meds"></div>
+    </div>
+  </div>
 
   <div class="foot">Lectura · Clase · Esquema · Flashcards · Test · Repaso</div>
   <div class="status" id="status"></div>
 </div>
 
 <script>
-const SEED={"2026-10-05": {"hecho": true, "flash": false, "tema": false, "min": 90, "nota": "No me dio tiempo a leerlo en la mañana", "real": "", "mod": null}, "2026-10-06": {"hecho": true, "flash": false, "tema": false, "min": 40, "nota": "", "real": "He leído el T2 de AE", "mod": null}, "2026-10-07": {"hecho": true, "flash": false, "tema": false, "min": 53, "nota": "", "real": "Clase de FAD: 1ª mitad (57:18)", "mod": null}, "2026-10-08": {"hecho": false, "flash": false, "tema": false, "min": null, "nota": "", "real": "Día de oficina", "mod": null}, "2026-10-09": {"hecho": true, "flash": false, "tema": false, "min": null, "nota": "Termine la clase de FAD, mañana me lo veré de nuevo desde la célula.", "real": "", "mod": null}, "2026-10-10": {"hecho": true, "flash": false, "tema": false, "min": 60, "nota": "", "real": "Empecé con el esquema del T1 de FAD", "mod": null}, "2026-10-12": {"hecho": false, "flash": false, "tema": false, "min": null, "nota": "", "real": "", "mod": "ogu"}}, SEED_DATE="10/10/2026";
 let readOnly=false;
+const SEED={"2026-10-05": {"hecho": true, "flash": false, "tema": false, "min": 90, "nota": "No me dio tiempo a leerlo en la mañana", "real": "", "mod": null, "pi": null, "pt": "", "pm": null}, "2026-10-06": {"hecho": true, "flash": false, "tema": false, "min": 40, "nota": "", "real": "He leído el T2 de AE", "mod": null, "pi": null, "pt": "", "pm": null}, "2026-10-07": {"hecho": true, "flash": false, "tema": false, "min": 53, "nota": "", "real": "Clase de FAD: 1ª mitad (57:18)", "mod": null, "pi": 3, "pt": "", "pm": null}, "2026-10-08": {"hecho": false, "flash": false, "tema": false, "min": null, "nota": "", "real": "Día de oficina", "mod": null, "pi": 2, "pt": "", "pm": null}, "2026-10-09": {"hecho": true, "flash": false, "tema": false, "min": null, "nota": "Termine la clase de FAD, mañana me lo veré de nuevo desde la célula.", "real": "", "mod": null, "pi": null, "pt": "", "pm": null}, "2026-10-10": {"hecho": true, "flash": false, "tema": false, "min": 60, "nota": "", "real": "Empecé con el esquema del T1 de FAD", "mod": null, "pi": null, "pt": "", "pm": null}, "2026-10-12": {"hecho": false, "flash": false, "tema": false, "min": null, "nota": "", "real": "", "mod": "ogu", "pi": null, "pt": "", "pm": null}}, SEED_DATE="10/10/2026";
 const FIRST_WEEK="2026-10-05", FLASH_FROM="2026-10-12", PARC_WEEK="2027-01-04";
 const DOWS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 const DL=["L","M","X","J","V","S","D"];
@@ -171,18 +208,25 @@ function parse(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d
 function addDays(s,n){const d=parse(s);d.setDate(d.getDate()+n);return iso(d)}
 function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return iso(x)}
 function idx(date){return (parse(date).getDay()+6)%7}
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 
 const todayIso=iso(new Date());
 const curWeek=mondayOf(new Date());
 let week=curWeek<FIRST_WEEK?FIRST_WEEK:curWeek;
 let sel=(todayIso>=week&&todayIso<=addDays(week,6))?todayIso:week;
-const state={}; let db=null, canWrite=true; const timers={}; let earnedPrev=null;
+const state={}; let db=null, canWrite=true; const timers={}; let earnedPrev=null; let editOpen=false;
 
-function get(d){return state[d]||{hecho:false,flash:false,tema:false,min:null,nota:"",real:"",mod:null}}
+function get(d){return state[d]||{hecho:false,flash:false,tema:false,min:null,nota:"",real:"",mod:null,pi:null,pt:"",pm:null}}
 function isSes(s){return !!(s.hecho||s.flash||(s.min||0)>0)}
-function planMin(d){return PLAN[idx(d)].m+(d>=FLASH_FROM?20:0)}
-function modOf(d){const P=PLAN[idx(d)];return P.pick?(get(d).mod||P.mod):P.mod}
-function titleOf(d){const P=PLAN[idx(d)],m=get(d).mod;return (P.tm&&m&&P.tm[m])||P.t}
+/* Plan del día: plantilla base, salvo que esa semana se haya intercambiado (pi), retitulado (pt) o cambiado de minutos (pm). */
+function tplIdx(d){const v=get(d).pi;return (v==null||v<0||v>6)?idx(d):v}
+function planP(d){return PLAN[tplIdx(d)]}
+function planBase(d){const s=get(d);return s.pm!=null?s.pm:planP(d).m}
+function planMin(d){return planBase(d)+(d>=FLASH_FROM?20:0)}
+function modOf(d){const P=planP(d);return P.pick?(get(d).mod||P.mod):P.mod}
+function tplTitle(d){const P=planP(d),m=get(d).mod;return (P.tm&&m&&P.tm[m])||P.t}
+function titleOf(d){return get(d).pt||tplTitle(d)}
+function changed(d){const s=get(d);return tplIdx(d)!==idx(d)||!!s.pt||s.pm!=null}
 function fmtH(m){return (Math.round(m/6)/10).toString().replace(".",",")+" h"}
 function vars(el,mod){const M=MOD[mod];el.style.setProperty("--m",`var(${M[1]})`);el.style.setProperty("--ml",`var(${M[2]})`)}
 function weekSes(w){let n=0;for(let i=0;i<7;i++)if(isSes(get(addDays(w,i))))n++;return n}
@@ -238,14 +282,43 @@ function renderStrip(){
   }
 }
 
+function renderBoard(){
+  const box=document.getElementById("board"); box.textContent="";
+  for(let i=0;i<7;i++){
+    const date=addDays(week,i), s=get(date), mod=modOf(date), b=document.createElement("button");
+    b.className="bd"+(s.hecho?" done":"")+(date===sel?" sel":"")+(date===todayIso?" today":"");
+    b.dataset.date=date; vars(b,mod);
+    const pm=planMin(date), meta=[];
+    meta.push(`<span>${s.min!=null?s.min+"'":"–"} / ${pm}'</span>`);
+    if(s.flash) meta.push(`<span class="k">Flash</span>`);
+    if(s.tema) meta.push(`<span class="k">Tema ✓</span>`);
+    if(changed(date)) meta.push(`<span>Plan cambiado</span>`);
+    b.innerHTML=`<div class="bdh"><span>${DOWS[i]} <b>${parse(date).getDate()}</b></span>${s.hecho?`<span class="bdok">✓</span>`:""}</div>
+      <span class="tag">${MOD[mod][0]}</span>
+      <div class="bdt">${s.real?`<s>${esc(titleOf(date))}</s>${esc(s.real)}`:esc(titleOf(date))}</div>
+      <div class="bdm">${meta.join("")}</div>`;
+    b.setAttribute("aria-label",`${DOWS[i]} ${parse(date).getDate()}: ${titleOf(date)}`+(s.hecho?", hecho":""));
+    box.appendChild(b);
+  }
+}
+
+function descOf(date){
+  const s=get(date), P=planP(date), parts=[];
+  if(tplIdx(date)!==idx(date)) parts.push(`Plan movido desde el ${DOWS[tplIdx(date)].toLowerCase()}.`);
+  parts.push(s.pt?"Tarea cambiada para este día.":P.p);
+  return parts.join(" ");
+}
+
 function renderCard(){
-  const date=sel, i=idx(date), P=PLAN[i], s=get(date), pm=planMin(date), card=document.getElementById("card"), mod=modOf(date);
+  const date=sel, i=idx(date), P=planP(date), s=get(date), pm=planMin(date), card=document.getElementById("card"), mod=modOf(date);
   vars(card,mod);
   const chips=[...new Set([pm||null,...QUICK].filter(Boolean))].sort((a,b)=>a-b);
   const custom=s.min!=null&&!chips.includes(s.min);
   const tag=P.pick
     ?`<span class="seg" role="group" aria-label="Módulo">${["ae","ogu"].map(k=>`<button data-mod="${k}" class="${s.mod===k||(!s.mod&&P.mod===k)?"on":""}" style="--m:var(${MOD[k][1]});--ml:var(${MOD[k][2]})">${MOD[k][0]}</button>`).join("")}</span>`
     :`<span class="tag">${MOD[mod][0]}</span>`;
+  const others=[...Array(7).keys()].filter(k=>k!==i).map(k=>{const d=addDays(week,k);return `<option value="${d}">${DOWS[k]} ${parse(d).getDate()} · ${esc(titleOf(d))}</option>`}).join("");
+  let anyChanged=false; for(let k=0;k<7;k++) if(changed(addDays(week,k))) anyChanged=true;
   card.innerHTML=`
     <div class="tagrow">${tag}<span>${pm?`Plan: ${pm} min`:"Sin estudio planificado"}</span></div>
     <div class="task"><h2></h2><p></p></div>
@@ -256,13 +329,24 @@ function renderCard(){
     <div><div class="lbl">Si cambió el plan</div><input class="field" id="real-${date}" maxlength="80" placeholder="Lo que hice"></div>
     <div class="togs">${date>=FLASH_FROM?`<button class="tog flash" aria-pressed="${s.flash}">Flashcards 20'</button>`:""}${mod!=="of"?`<button class="tog tema" aria-pressed="${!!s.tema}">Tema terminado</button>`:""}</div>
     <input class="field" id="note-${date}" maxlength="140" placeholder="Nota">
-    <button class="go${s.hecho?" on":""}">${s.hecho?"Hecho ✓  ·  Deshacer":"Marcar como hecho"}</button>`;
+    <button class="go${s.hecho?" on":""}">${s.hecho?"Hecho ✓  ·  Deshacer":"Marcar como hecho"}</button>
+    <details class="edit" id="edit"${editOpen?" open":""}>
+      <summary>Cambiar el plan de este día</summary>
+      <div class="editb">
+        <div><div class="lbl">Tarea planificada</div><input class="field" id="pt-${date}" maxlength="80"></div>
+        <div><div class="lbl">Minutos</div><input class="field" id="pm-${date}" type="number" inputmode="numeric" min="0" max="600"></div>
+        <div class="full"><div class="lbl">Intercambiar con</div><select class="field" id="swap-${date}"><option value="">Elige un día de esta semana</option>${others}</select></div>
+        ${anyChanged?`<button class="reset full" id="reset">Volver al plan base esta semana</button>`:""}
+      </div>
+    </details>`;
   const t=card.querySelector(".task"), h=t.querySelector("h2");
   if(s.real){const x=document.createElement("s");x.textContent=titleOf(date);t.prepend(x);h.textContent=s.real}else h.textContent=titleOf(date);
-  t.querySelector("p").textContent=P.p;
-  if(custom) card.querySelector("input[type=number]").value=s.min;
+  t.querySelector("p").textContent=descOf(date);
+  if(custom) card.querySelector(`#min-${date}`).value=s.min;
   card.querySelector(`#real-${date}`).value=s.real||"";
   card.querySelector(`#note-${date}`).value=s.nota||"";
+  const pt=card.querySelector(`#pt-${date}`); pt.value=s.pt||""; pt.placeholder=tplTitle(date);
+  const pmI=card.querySelector(`#pm-${date}`); pmI.value=s.pm!=null?s.pm:""; pmI.placeholder=String(P.m);
 }
 
 function renderSummary(){
@@ -303,7 +387,8 @@ function renderMedals(list){
 }
 
 function renderStats(){const c=chain(),list=medals(c);renderSummary();renderChain(c);renderMedals(list);return list}
-function renderAll(){renderHeader();renderStrip();renderCard();return renderStats();}
+function renderDays(){renderStrip();renderBoard()}
+function renderAll(){renderHeader();renderDays();renderCard();return renderStats();}
 
 /* Premios */
 let toastQ=[],toastOn=false;
@@ -337,24 +422,49 @@ function save(date){
   timers[date]=setTimeout(async()=>{
     if(!db||!canWrite) return;
     const s=get(date); setStatus("Guardando…");
-    try{await db.doc("dias/"+date).set({fecha:date,hecho:!!s.hecho,flash:!!s.flash,tema:!!s.tema,min:s.min??null,nota:s.nota||"",real:s.real||"",mod:s.mod||null});setStatus("Guardado");setTimeout(()=>setStatus(""),1500);}
+    try{await db.doc("dias/"+date).set({fecha:date,hecho:!!s.hecho,flash:!!s.flash,tema:!!s.tema,min:s.min??null,nota:s.nota||"",real:s.real||"",mod:s.mod||null,pi:s.pi??null,pt:s.pt||"",pm:s.pm??null});setStatus("Guardado");setTimeout(()=>setStatus(""),1500);}
     catch(e){if(e&&e.code==="invalid_argument"){canWrite=false;document.getElementById("banner").hidden=false;setStatus("")}else setStatus("No se pudo guardar. Inténtalo de nuevo en un momento.");}
   },500);
 }
-function update(patch,opts){
+/* Aplica cambios a uno o varios días, refresca la vista y celebra si la semana llega a 4 sesiones. */
+function patchDays(list,opts){
   if(readOnly){renderCard();toast("Copia de solo lectura: registra en la herramienta de Claude");return}
-  const card=!opts||opts.card!==false, w=mondayOf(parse(sel)), before=weekSes(w);
-  state[sel]={...get(sel),...patch};
-  renderStrip(); if(card) renderCard(); const list=renderStats();
-  const after=weekSes(w);
-  if(before<4&&after>=4){confetti();toast("Semana cumplida: 4 de 4 sesiones")}
-  const on=list.filter(m=>m.on).map(m=>m.id);
-  if(earnedPrev) for(const id of on) if(!earnedPrev.includes(id)) toast("Nueva medalla: "+list.find(m=>m.id===id).n);
+  const card=!opts||opts.card!==false, w=mondayOf(parse(list[0][0])), before=weekSes(w);
+  for(const [d,p] of list) state[d]={...get(d),...p};
+  renderDays(); if(card) renderCard(); const stats=renderStats();
+  if(before<4&&weekSes(w)>=4){confetti();toast("Semana cumplida: 4 de 4 sesiones")}
+  const on=stats.filter(m=>m.on).map(m=>m.id);
+  if(earnedPrev) for(const id of on) if(!earnedPrev.includes(id)) toast("Nueva medalla: "+stats.find(m=>m.id===id).n);
   earnedPrev=on;
-  save(sel);
+  for(const [d] of list) save(d);
+}
+function update(patch,opts){
+  patchDays([[sel,patch]],opts);
+}
+/* Intercambia el plan (plantilla, título, minutos y módulo) entre dos días de la misma semana. Lo registrado no se mueve. */
+function swapPlan(a,b){
+  const take=d=>{const s=get(d);return {pi:tplIdx(d),pt:s.pt||"",pm:s.pm??null,mod:s.mod||null}};
+  const A=take(a), B=take(b);
+  const fix=(d,P)=>({...P,pi:P.pi===idx(d)?null:P.pi});
+  patchDays([[a,fix(a,B)],[b,fix(b,A)]]);
+  toast(`Plan intercambiado: ${DOWS[idx(a)].toLowerCase()} y ${DOWS[idx(b)].toLowerCase()}`);
+}
+function resetWeek(){
+  const list=[]; for(let k=0;k<7;k++){const d=addDays(week,k);if(changed(d))list.push([d,{pi:null,pt:"",pm:null}])}
+  if(list.length){patchDays(list);toast("Plan base restaurado para esta semana")}
+}
+function refreshTitle(){
+  const t=document.querySelector("#card .task"); if(!t) return;
+  const h=t.querySelector("h2"), s=get(sel); let x=t.querySelector("s");
+  if(s.real){if(!x){x=document.createElement("s");t.prepend(x)}x.textContent=titleOf(sel);h.textContent=s.real}
+  else{if(x)x.remove();h.textContent=titleOf(sel)}
+  t.querySelector("p").textContent=descOf(sel);
+  const pm=planMin(sel); document.querySelector("#card .tagrow span:last-child").textContent=pm?`Plan: ${pm} min`:"Sin estudio planificado";
 }
 
-document.getElementById("strip").addEventListener("click",e=>{const b=e.target.closest(".dc");if(!b)return;sel=b.dataset.date;renderAll();});
+function pick(e){const b=e.target.closest("[data-date]");if(!b)return;sel=b.dataset.date;renderAll();}
+document.getElementById("strip").addEventListener("click",pick);
+document.getElementById("board").addEventListener("click",pick);
 const cardEl=document.getElementById("card");
 cardEl.addEventListener("click",e=>{
   const md=e.target.closest("[data-mod]"); if(md){update({mod:md.dataset.mod});return;}
@@ -362,15 +472,20 @@ cardEl.addEventListener("click",e=>{
   if(e.target.closest(".tog.flash")){update({flash:!get(sel).flash});return;}
   if(e.target.closest(".tog.tema")){update({tema:!get(sel).tema});return;}
   if(e.target.closest(".go")){update({hecho:!get(sel).hecho});return;}
+  if(e.target.closest("#reset")){resetWeek();return;}
 });
+cardEl.addEventListener("toggle",e=>{if(e.target.id==="edit")editOpen=e.target.open},true);
+cardEl.addEventListener("change",e=>{if(e.target.id.startsWith("swap-")&&e.target.value)swapPlan(sel,e.target.value)});
+const num=v=>v===""?null:Math.max(0,Math.min(600,Math.round(Number(v))));
 cardEl.addEventListener("input",e=>{
-  if(e.target.type==="number"){const n=e.target.value===""?null:Math.max(0,Math.min(600,Math.round(Number(e.target.value))));
+  const id=e.target.id||"";
+  if(id.startsWith("min-")){const n=num(e.target.value);
     cardEl.querySelectorAll("[data-min]").forEach(x=>x.classList.remove("on"));e.target.parentElement.classList.toggle("on",n!=null);
     update({min:Number.isFinite(n)?n:null},{card:false});return;}
-  if(e.target.id.startsWith("real")){update({real:e.target.value.slice(0,80)},{card:false});
-    const t=cardEl.querySelector(".task"),h=t.querySelector("h2");let x=t.querySelector("s");
-    if(e.target.value){if(!x){x=document.createElement("s");x.textContent=titleOf(sel);t.prepend(x)}h.textContent=e.target.value}else{if(x)x.remove();h.textContent=titleOf(sel)}return;}
-  if(e.target.id.startsWith("note")) update({nota:e.target.value.slice(0,140)},{card:false});
+  if(id.startsWith("real-")){update({real:e.target.value.slice(0,80)},{card:false});refreshTitle();return;}
+  if(id.startsWith("note-")){update({nota:e.target.value.slice(0,140)},{card:false});return;}
+  if(id.startsWith("pt-")){update({pt:e.target.value.slice(0,80)},{card:false});refreshTitle();return;}
+  if(id.startsWith("pm-")){const n=num(e.target.value);update({pm:Number.isFinite(n)?n:null},{card:false});refreshTitle();return;}
 });
 document.getElementById("prev").onclick=()=>{if(week>FIRST_WEEK){week=addDays(week,-7);sel=week;renderAll()}};
 document.getElementById("next").onclick=()=>{week=addDays(week,7);sel=week;renderAll()};
@@ -384,9 +499,9 @@ renderAll();
     const b=document.getElementById("banner"); b.textContent=`Copia de solo lectura con tus datos hasta el ${SEED_DATE}. Para registrar, usa la herramienta en Claude.`; b.hidden=false;
     const list=renderAll(); earnedPrev=list.filter(m=>m.on).map(m=>m.id); return}
   db.collection("dias").onSnapshot(snap=>{
-    snap.docs.forEach(d=>{const v=d.data();if(v)state[d.id]={hecho:!!v.hecho,flash:!!v.flash,tema:!!v.tema,min:v.min??null,nota:v.nota||"",real:v.real||"",mod:v.mod||null};});
+    snap.docs.forEach(d=>{const v=d.data();if(v)state[d.id]={hecho:!!v.hecho,flash:!!v.flash,tema:!!v.tema,min:v.min??null,nota:v.nota||"",real:v.real||"",mod:v.mod||null,pi:v.pi??null,pt:v.pt||"",pm:v.pm??null};});
     const a=document.activeElement; let list;
-    if(a&&a.closest&&a.closest("#card")&&a.tagName==="INPUT"){renderStrip();list=renderStats()}else list=renderAll();
+    if(a&&a.closest&&a.closest("#card")&&(a.tagName==="INPUT"||a.tagName==="SELECT")){renderDays();list=renderStats()}else list=renderAll();
     earnedPrev=list.filter(m=>m.on).map(m=>m.id);
   },()=>setStatus("Sin conexión con el registro. Recarga la página."));
 })();
